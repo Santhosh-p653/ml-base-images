@@ -1,19 +1,22 @@
-name: Build and Push Base Images
+name: Build and Push Images
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build-base:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -27,15 +30,41 @@ jobs:
           docker build -t ghcr.io/santhosh-p653/base:latest ./base
           docker push ghcr.io/santhosh-p653/base:latest
 
-  build-ml:
+  build-dl:
     runs-on: ubuntu-latest
-    needs: build-base          # waits for base to finish
+    needs: build-base
+
     permissions:
       contents: read
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push dl
+        run: |
+          docker build -t ghcr.io/santhosh-p653/dl:latest ./dl
+          docker push ghcr.io/santhosh-p653/dl:latest
+
+  build-ml:
+    runs-on: ubuntu-latest
+    needs: build-base
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Login to GHCR
         uses: docker/login-action@v3
